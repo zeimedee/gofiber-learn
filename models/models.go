@@ -6,3 +6,8 @@ type Employee struct {
 	Salary float64 `json:"salary"`
 	Age    float64 `json:"age"`
 }
+
+type Admin struct {
+	User     string `json:"user" bson:"user,omitempty"`
+	Password string `json:"password" bson:"password,omitempty"`
+}

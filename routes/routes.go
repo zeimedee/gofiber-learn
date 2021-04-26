@@ -9,6 +9,40 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func Register(c *fiber.Ctx) error {
+	collection := database.Mg.Db.Collection("admin")
+	admin := new(models.Admin)
+
+	if err := c.BodyParser(admin); err != nil {
+		return c.Status(400).JSON(err.Error())
+	}
+	insert, err := collection.InsertOne(c.Context(), admin)
+	if err != nil {
+		return c.Status(400).JSON(err.Error())
+	}
+	filter := bson.D{{Key: "_id", Value: insert.InsertedID}}
+	createdRecord := collection.FindOne(c.Context(), filter)
+
+	createdAdmin := &models.Admin{}
+	createdRecord.Decode(createdAdmin)
+	return c.Status(200).JSON(createdAdmin)
+}
+
+func Login(c *fiber.Ctx) error {
+	collection := database.Mg.Db.Collection("admin")
+	admin := new(models.Admin)
+	if err := c.BodyParser(admin); err != nil {
+		return c.Status(400).JSON("failed")
+	}
+
+	query := bson.D{{Key: "user", Value: admin.User}}
+	result := collection.FindOne(c.Context(), query)
+
+	ad := &models.Admin{}
+	result.Decode(ad)
+	return c.Status(200).JSON(ad)
+}
+
 func GetEmployees(c *fiber.Ctx) error {
 	query := bson.D{{}}
 
