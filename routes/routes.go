@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/ziemedee/gofiber-learn/database"
 	"github.com/ziemedee/gofiber-learn/models"
@@ -9,12 +12,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+const Secret = "secret"
+
 func Register(c *fiber.Ctx) error {
 	collection := database.Mg.Db.Collection("admin")
 	admin := new(models.Admin)
 
 	if err := c.BodyParser(admin); err != nil {
 		return c.Status(400).JSON(err.Error())
+	}
+	query := bson.D{{Key: "user", Value: admin.User}}
+	result := collection.FindOne(c.Context(), query)
+	user := &models.Admin{}
+	result.Decode(user)
+	if user.User != "" {
+		return c.Status(400).JSON("user exists")
 	}
 	insert, err := collection.InsertOne(c.Context(), admin)
 	if err != nil {
@@ -40,7 +52,24 @@ func Login(c *fiber.Ctx) error {
 
 	ad := &models.Admin{}
 	result.Decode(ad)
-	return c.Status(200).JSON(ad)
+	if ad.User != "" && ad.Password != "" {
+
+		token := jwt.New(jwt.SigningMethodHS256)
+		claims := token.Claims.(jwt.MapClaims)
+		claims["sub"] = "1"
+		claims["exp"] = time.Now().Add(time.Hour * 24 * 7) // a week
+
+		s, err := token.SignedString([]byte(Secret))
+		if err != nil {
+			return c.Status(500).JSON("internal server error")
+		}
+
+		return c.Status(200).JSON(fiber.Map{
+			"token": s,
+			"user":  ad.User,
+		})
+	}
+	return c.Status(404).JSON("admin does not exist")
 }
 
 func GetEmployees(c *fiber.Ctx) error {

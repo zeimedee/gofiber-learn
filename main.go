@@ -5,17 +5,18 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/ziemedee/gofiber-learn/database"
+	"github.com/ziemedee/gofiber-learn/middleware"
 	"github.com/ziemedee/gofiber-learn/routes"
 )
 
 func setUpRoutes(app *fiber.App) {
-	app.Post("/register", routes.Register)
+	app.Post("/register", middleware.Auth(), routes.Register)
 	app.Post("/login", routes.Login)
-	app.Get("/employees", routes.GetEmployees)
-	app.Get("/employee/:id", routes.GetEmployee)
-	app.Post("/employee", routes.AddEmployee)
-	app.Put("/employee/:id", routes.UpdateEmployees)
-	app.Delete("/employee/:id", routes.DeleteEmployees)
+	app.Get("/employees", middleware.Auth(), routes.GetEmployees)
+	app.Get("/employee/:id", middleware.Auth(), routes.GetEmployee)
+	app.Post("/employee", middleware.Auth(), routes.AddEmployee)
+	app.Put("/employee/:id", middleware.Auth(), routes.UpdateEmployees)
+	app.Delete("/employee/:id", middleware.Auth(), routes.DeleteEmployees)
 }
 
 func main() {
