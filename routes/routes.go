@@ -56,7 +56,7 @@ func Login(c *fiber.Ctx) error {
 
 		token := jwt.New(jwt.SigningMethodHS256)
 		claims := token.Claims.(jwt.MapClaims)
-		claims["sub"] = "1"
+		// claims["sub"] = "1"
 		claims["exp"] = time.Now().Add(time.Hour * 24 * 7) // a week
 
 		s, err := token.SignedString([]byte(Secret))
@@ -64,9 +64,18 @@ func Login(c *fiber.Ctx) error {
 			return c.Status(500).JSON("internal server error")
 		}
 
+		cookie := new(fiber.Cookie)
+		cookie.Name = "token"
+		cookie.Value = s
+		cookie.HTTPOnly = false
+		cookie.MaxAge = 999999
+		cookie.Expires = time.Now().Add(24 * time.Hour)
+		// cookie.SameSite = "Lax"
+		// cookie.Secure = true
+		c.Cookie(cookie)
+
 		return c.Status(200).JSON(fiber.Map{
-			"token": s,
-			"user":  ad.User,
+			"user": ad.User,
 		})
 	}
 	return c.Status(404).JSON("admin does not exist")

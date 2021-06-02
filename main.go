@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/ziemedee/gofiber-learn/database"
 	"github.com/ziemedee/gofiber-learn/middleware"
 	"github.com/ziemedee/gofiber-learn/routes"
@@ -25,13 +26,21 @@ func main() {
 		log.Fatal(err)
 	}
 	app := fiber.New()
-
+	app.Use(cors.New(cors.Config{
+		Next:             nil,
+		AllowOrigins:     "*",
+		AllowMethods:     "GET,POST,HEAD,PUT,DELETE",
+		AllowHeaders:     "",
+		AllowCredentials: true,
+		ExposeHeaders:    "",
+		MaxAge:           999999,
+	}))
 	setUpRoutes(app)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("go fiber")
 	})
 
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":4000"))
 
 }
